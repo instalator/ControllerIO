@@ -42,12 +42,21 @@ void callback_iobroker(String strTopic, String strPayload) {
 }
 
 void AnalogRead(){
-  int Ain_1 = analogRead(AIN_1);
-  int Ain_2 = analogRead(AIN_2);
-  int Ain_3 = analogRead (AIN_3);
-  int Ain_4 = analogRead (AIN_4);
-  if (millis() - prevMillis2 > 5000){
+  unsigned int Ain_1 = analogRead(AIN_1);
+  unsigned int Ain_2 = analogRead(AIN_2);
+  unsigned int Ain_3 = analogRead (AIN_3);
+  unsigned int Ain_4 = analogRead (AIN_4);
+
+  if(Ain_1 == 1){Ain_1 = 0;}
+  if(Ain_2 == 1){Ain_2 = 0;}
+  if(Ain_3 == 1){Ain_3 = 0;}
+  if(Ain_4 == 1){Ain_4 = 0;}
+  if (((old_Ain_1 != Ain_1 || old_Ain_2 != Ain_2 || old_Ain_3 != Ain_3 || old_Ain_4 != Ain_4) && millis() - prevMillis2 > 1000) || firststart){
     prevMillis2 = millis();
+    old_Ain_1 = Ain_1;
+    old_Ain_2 = Ain_2;
+    old_Ain_3 = Ain_3;
+    old_Ain_4 = Ain_4;
     client.publish("myhome/controller/AIN_1", IntToChar(Ain_1));
     client.publish("myhome/controller/AIN_2", IntToChar(Ain_2));
     client.publish("myhome/controller/AIN_3", IntToChar(Ain_3));
@@ -58,10 +67,13 @@ void AnalogRead(){
 void DinRead(){
   int Din_1 = digitalRead(DIN_1);
   int Din_2 = digitalRead(DIN_2);
-  if (millis() - prevMillis3 > 5000){
+  if (((old_din_1 != Din_1 || old_din_2 != Din_2) && millis() - prevMillis3 > 500) || firststart){
     prevMillis3 = millis();
+    old_din_1 = Din_1;
+    old_din_2 = Din_2;
     client.publish("myhome/controller/DIN_1", BoolToChar(Din_1));
     client.publish("myhome/controller/DIN_2", BoolToChar(Din_2));
+    firststart = false;
   }
 }
 
@@ -70,19 +82,19 @@ void ReadButton (){
   if (firststart){
     for(int i = 0; i <= 15; i++){
       btn_old[i] = mcp.digitalRead(bt[i]);
-      //delay(200);
+      delay(100);
       Switch(i);
     }
-    firststart = false;
-  }
-  for(int i = 0; i <= 15; i++){
-    btn[i] = mcp.digitalRead(bt[i]);
-    if (btn[i] != btn_old[i]){
-      //if (millis() - prevMillisPoll > 100){
-        //prevMillisPoll = millis();
-        btn_old[i] = btn[i];
-        Switch(i);
-     //}
+  } else {
+    for(int i = 0; i <= 15; i++){
+      btn[i] = mcp.digitalRead(bt[i]);
+      if (btn[i] != btn_old[i]){
+        //if (millis() - prevMillisPoll > 100){
+          //prevMillisPoll = millis();
+          btn_old[i] = btn[i];
+          Switch(i);
+       //}
+      }
     }
   }
 }
